@@ -11,3 +11,125 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
+# library to be imported
+library(tidyverse)
+
+# Let's read the Data 
+
+df=read.csv("Position_Salaries.csv")
+
+
+
+
+# Problem is that company like to hire a Regional Manager and he asking 160k as salary
+
+
+
+# Data  is about position in companies with position ,levels and salaries of previous employers  
+head(df)
+# > head(df)
+# Position Level Salary
+# 1  Business Analyst     1  45000
+# 2 Junior Consultant     2  50000
+# 3 Senior Consultant     3  60000
+# 4           Manager     4  80000
+# 5   Country Manager     5 110000
+# 6    Region Manager     6 150000
+
+
+# company Hr run some models to check if employer is saying the truth or Bluffing
+
+# since we are Analyzing just level and Salary 
+df1=df[2:3]
+
+# company Runs a linear expression to check 
+
+lin_reg=lm(Salary~.,data=df1)
+summary(lin_reg)
+
+# Call:
+#   lm(formula = Salary ~ ., data = df1)
+# 
+# Residuals:
+#   Min      1Q  Median      3Q     Max 
+# -170818 -129720  -40379   65856  386545 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)   
+# (Intercept)  -195333     124790  -1.565  0.15615   
+# Level          80879      20112   4.021  0.00383 **
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Residual standard error: 182700 on 8 degrees of freedom
+# Multiple R-squared:  0.669,	Adjusted R-squared:  0.6277 
+# F-statistic: 16.17 on 1 and 8 DF,  p-value: 0.003833
+
+
+
+# company Runs a Polinomial expression to check 
+df1$Level2=df1$Level^2
+df1$Level3=df1$Level^3
+df1$Level4=df1$Level^4
+poly_reg=lm(Salary~.,data=df1)
+summary(poly_reg)
+
+
+
+# Call:
+# lm(formula = Salary ~ ., data = df1)
+# 
+# Residuals:
+#   1      2      3      4      5      6      7      8      9     10 
+# -8357  18240   1358 -14633 -11725   6725  15997  10006 -28695  11084 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)   
+# (Intercept)  184166.7    67768.0   2.718  0.04189 * 
+#   Level       -211002.3    76382.2  -2.762  0.03972 * 
+#   Level2        94765.4    26454.2   3.582  0.01584 * 
+#   Level3       -15463.3     3535.0  -4.374  0.00719 **
+#   Level4          890.2      159.8   5.570  0.00257 **
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Residual standard error: 20510 on 5 degrees of freedom
+# Multiple R-squared:  0.9974,	Adjusted R-squared:  0.9953 
+# F-statistic: 478.1 on 4 and 5 DF,  p-value: 1.213e-06
+
+
+
+
+# Lets plot the Linear expression and check.options
+
+ggplot()+geom_point(aes(x=df1$Level,y=df1$Salary),col="red")+
+geom_line(aes(x=df1$Level,y=predict(lin_reg,newdata = df1)),col="blue")
++ggtitle("Bluff Vs Truth Linear Expression ")+xlab("Levels")+ylab("Salary")
+
+
+
+# Lets plot the Polynomial expression and check.options
+
+ggplot()+geom_point(aes(x=df1$Level,y=df1$Salary),col="red")+
+  geom_line(aes(x=df1$Level,y=predict(poly_reg,newdata = df1)),col="blue")
++ggtitle("Bluff Vs Truth PolyNomial Expression ")+xlab("Levels")+ylab("Salary")
+
+
+# as we can see the polynomial plot is better fit and easy to  predict but we will predict 
+# for linear and polynomial expression using predict
+
+
+# Linear expression predict
+
+lin_predict=predict(lin_reg,data.frame(Level=6.5))
+lin_predict    
+#  
+# 330378.8 
+# linear model predicted 330378.8 
+
+# PolyNomial  Expression Predict
+poly_predict=predict(poly_reg,data.frame(Level=6.5,Level2=6.5^2,Level3=6.5^3,Level4=6.5^4))
+poly_predict 
+# 158862.5
+
+# Polynomial predicted 158862.5 for level 6.5 employee 160 k is not a bluff
